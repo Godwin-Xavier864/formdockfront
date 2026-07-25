@@ -1,0 +1,100 @@
+:root {
+  --text: #0f172a;
+  --surface: #ffffff;
+  --line: #cbd5e1;
+  --accent-soft: #f2f7ff;
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Segoe UI", sans-serif;
+  line-height: 1.45;
+  font-weight: 400;
+  color: var(--text);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(154, 135, 255, 0.35) rgba(12, 10, 28, 0.15);
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: #000000;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+h2,
+h3 {
+  margin: 0;
+}
+
+input,
+textarea,
+select,
+button {
+  font: inherit;
+}
+
+input,
+textarea,
+select {
+  border-radius: 9px;
+  background: var(--surface);
+  padding: 0.55rem 0.7rem;
+  width: 100%;
+  color: var(--text);
+}
+
+button {
+  border: 1px solid #b7c4db;
+  border-radius: 9px;
+  background: linear-gradient(180deg, #f8fbff 0%, var(--accent-soft) 100%);
+  color: var(--text);
+  padding: 0.5rem 0.8rem;
+  cursor: pointer;
+
+  will-change: border-radius, transform;
+
+  transition:
+    border-radius 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+    background 0.45s ease,
+    color 0.35s ease;
+}
+
+button:hover {
+  background: #ffffff;
+  color: #000;
+  border-radius: 20px;
+}
+
+button:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Custom Thin Scrollbar */
+::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(12, 10, 28, 0.15);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(154, 135, 255, 0.35);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(154, 135, 255, 0.6);
+}

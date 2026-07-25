@@ -1,0 +1,455 @@
+# API v1 Documentation
+
+Base URL: `http://localhost:8000/api/v1/`
+
+Scope:
+- This document contains only user-side/public integration APIs.
+- Admin/staff APIs are intentionally excluded from this file.
+
+Authentication:
+- JWT (recommended for React): `Authorization: Bearer <access_token>`
+- Session (for dashboard users)
+
+All endpoints below require authentication unless marked Public.
+
+---
+
+## Auth (Public)
+
+### Register
+`POST /api/auth/register/`
+```json
+{ "username": "demo", "email": "demo@example.com", "password": "1" }
+```
+
+### Login (JWT)
+`POST /api/auth/token/`
+```json
+{ "username": "demo", "password": "1" }
+```
+Response:
+```json
+{ "access": "...", "refresh": "..." }
+```
+
+### Refresh
+`POST /api/auth/token/refresh/`
+```json
+{ "refresh": "..." }
+```
+
+### Email Verify
+`GET /api/auth/email/verify/?token=...`
+
+---
+
+## Me
+
+### Current User
+`GET /api/v1/me/`
+Response:
+```json
+{
+  "id": "uuid",
+  "username": "demo",
+  "email": "demo@example.com",
+  "email_verified": false
+}
+```
+
+### Delete My Account
+`DELETE /api/v1/me/`
+
+If user has active subscription, API returns:
+```json
+{
+  "success": false,
+  "error": "You have an active subscription and it can't be refunded. Please wait for expiry before deleting your account."
+}
+```
+
+To delete anyway (no refund), send either:
+- Query param: `DELETE /api/v1/me/?force_delete=true`
+- Or body: `{ "force_delete": true }`
+
+---
+
+## Projects
+
+### List Projects
+`GET /api/v1/projects/`
+
+### Create Project
+`POST /api/v1/projects/`
+```json
+{
+  "name": "My Site",
+  "allowed_domains": ["example.com", "www.example.com"]
+}
+```
+Response includes:
+```json
+{
+  "id": "uuid",
+  "name": "My Site",
+  "public_api_key": "abcdef...",
+  "faq_public_api_key": "ghijkl...",
+  "allowed_domains": ["example.com"],
+  "created_at": "2026-02-08T12:00:00Z"
+}
+```
+
+### Project Detail
+`GET /api/v1/projects/<uuid>/`
+
+### Update Project
+`PATCH /api/v1/projects/<uuid>/`
+```json
+{
+  "name": "Updated Project Name",
+  "allowed_domains": ["example.com", "www.example.com"]
+}
+```
+
+### Delete Project
+`DELETE /api/v1/projects/<uuid>/`
+
+### Project Overview (Dashboard API)
+`GET /api/v1/projects/<uuid>/overview/`
+Returns project + recent enquiries + recent FAQ chats + quota/subscription snapshot.
+
+### Rotate API Key
+`POST /api/v1/projects/<uuid>/rotate-key/`
+Response:
+```json
+{ "public_api_key": "new_key..." }
+```
+
+### Rotate FAQ API Key
+`POST /api/v1/projects/<uuid>/rotate-faq-key/`
+Response:
+```json
+{ "faq_public_api_key": "new_key..." }
+```
+
+### Billing Overview
+`GET /api/v1/projects/<uuid>/billing/`
+Response includes paywall status, active plans, and current project subscription.
+
+### Create Billing Order
+`POST /api/v1/projects/<uuid>/billing/order/`
+```json
+{
+  "plan_id": "uuid",
+  "client_request_id": "optional-idempotency-key"
+}
+```
+Response:
+```json
+{
+  "payment_id": "uuid",
+  "order_id": "order_...",
+  "razorpay_key_id": "rzp_...",
+  "amount_inr": 199,
+  "currency": "INR"
+}
+```
+
+### Verify Billing Payment
+`POST /api/v1/projects/<uuid>/billing/verify/`
+```json
+{
+  "payment_id": "uuid",
+  "razorpay_order_id": "order_...",
+  "razorpay_payment_id": "pay_...",
+  "razorpay_signature": "..."
+}
+```
+
+### Project FAQ Config (for site-specific FAQ bot)
+`GET /api/v1/projects/<uuid>/faq-config/`
+`PUT /api/v1/projects/<uuid>/faq-config/`
+```json
+{
+  "site_name": "Acme",
+  "business_summary": "We sell eco products",
+  "key_points": "Shipping in 48h; no COD",
+  "support_email": "support@acme.com",
+  "support_phone": "+91-9000000000",
+  "business_hours": "Mon-Fri 9AM-6PM IST",
+  "tone": "friendly",
+  "faqs_text": "Q: Refund? A: 7 days.",
+  "extra_context": "Never promise unavailable features."
+}
+```
+
+---
+
+## Enquiries
+
+### List Project Enquiries
+`GET /api/v1/projects/<uuid>/enquiries/`
+
+Query params:
+- `category` = spam|enquiry|job|support
+- `search` = text
+
+Locked enquiries return `raw_payload: null`.
+
+### List Project FAQ Chats
+`GET /api/v1/projects/<uuid>/faq-chats/`
+
+Query params:
+- `blocked` = `true|false`
+- `search` = text
+
+---
+
+## Analytics
+
+### Project Analytics
+`GET /api/v1/projects/<uuid>/analytics/`
+Response:
+```json
+{
+  "per_day": { "labels": ["2026-02-01"], "counts": [12] },
+  "per_month": { "labels": ["2026-02"], "counts": [120] },
+  "category_counts": { "enquiry": 80, "spam": 5 },
+  "country_counts": { "Unknown": 120 },
+  "peak_hour": "14",
+  "paywalled": false
+}
+```
+
+---
+
+## Notifications
+
+### List Notifications
+`GET /api/v1/notifications/`
+Response:
+```json
+[
+  {
+    "id": "uuid",
+    "title": "Maintenance",
+    "body": "We will be down tonight.",
+    "level": "warn",
+    "publish_at": "2026-02-08T10:00:00Z",
+    "expires_at": null
+  }
+]
+```
+
+---
+
+## Support Messages
+
+### List My Messages
+`GET /api/v1/support/`
+
+### Create Support Message
+`POST /api/v1/support/`
+```json
+{ "subject": "Need help", "message": "Please assist with setup." }
+```
+Response:
+```json
+{ "success": true }
+```
+
+---
+
+## Form AI Rewrite Tool
+
+### Rewrite HTML Using Groq
+`POST /api/v1/tools/form-rewrite/`
+```json
+{
+  "project_id": "uuid",
+  "html_input": "<!DOCTYPE html><html>...</html>"
+}
+```
+Response:
+```json
+{
+  "rewritten_html": "<!DOCTYPE html><html>...</html>",
+  "tries_left": 1
+}
+```
+
+Notes:
+- Hard quota: maximum 2 rewrite attempts per user (shared between API and dashboard tool).
+- Returns `429` when limit is exhausted.
+
+---
+
+## Public Form Submission (Public)
+
+### Submit Enquiry
+`POST /api/forms/submit/`
+```json
+{
+  "project_api_key": "YOUR_PUBLIC_API_KEY",
+  "fields": {
+    "name": "Jane Doe",
+    "email": "jane@example.com",
+    "message": "Hello there"
+  },
+  "metadata": {
+    "page_url": "https://example.com/contact",
+    "referrer": "https://example.com",
+    "user_agent": "Mozilla/5.0",
+    "timestamp": "2026-02-08T10:00:00Z"
+  }
+}
+```
+Response:
+```json
+{ "success": true, "enquiry_id": "queue_uuid", "locked": false, "queued": true }
+```
+
+Status: `202 Accepted`
+
+Versioned alias:
+- `POST /api/v1/public/forms/submit/`
+
+Notes:
+- Ingest is queue-based; Celery worker flushes queued records in batches.
+- Rate limiting is Redis-backed when `REDIS_URL` is configured.
+
+---
+
+## Public FAQ Chat (Public)
+
+### Ask FAQ Chatbot
+`POST /api/faq/chat/`
+```json
+{
+  "faq_api_key": "FAQ_PUBLIC_API_KEY",
+  "question": "What is your refund policy?",
+  "metadata": {
+    "page_url": "https://example.com/faq",
+    "user_agent": "Mozilla/5.0"
+  }
+}
+```
+Response:
+```json
+{
+  "success": true,
+  "chat_id": "uuid",
+  "answer": "Refunds are available within 7 days for paid plans.",
+  "remaining_quota": 49,
+  "test_mode": true
+}
+```
+
+Notes:
+- Uses Groq LLM on backend.
+- Backend uses only saved project FAQ config context (from dashboard or `/api/v1/projects/<uuid>/faq-config/`) for site-specific answers.
+- Visitor requests cannot submit runtime context.
+- `include_collections` can be passed as boolean to include CMS collection data in LLM context.
+- Enforces allowed domain checks, DRF throttle, and Redis-backed project+IP limiter.
+- Paywall OFF: `50 chats/day` per project + global daily cap `100000` (test mode).
+- Paywall ON: paid plan `monthly_chat_quota`; free projects use `FREE_CHAT_LIMIT_WHEN_PAYWALL_ON`.
+
+Versioned alias:
+- `POST /api/v1/public/faq/chat/`
+
+---
+
+## Project FAQ Ask (Authenticated)
+
+### Ask FAQ With Project Auth
+`POST /api/v1/projects/<uuid>/faq/ask/`
+```json
+{
+  "question": "Do you have weekend support?",
+  "include_collections": true
+}
+```
+Response:
+```json
+{
+  "answer": "Support hours are Mon-Fri 9 AM to 6 PM.",
+  "include_collections": true
+}
+```
+
+---
+
+## Mini CMS (Authenticated)
+
+### List/Create Collections
+`GET /api/v1/projects/<uuid>/collections/`
+`POST /api/v1/projects/<uuid>/collections/`
+```json
+{ "name": "faq_items" }
+```
+
+### Get/Rename/Delete Collection
+`GET /api/v1/projects/<uuid>/collections/<collection_uuid>/`
+`PATCH /api/v1/projects/<uuid>/collections/<collection_uuid>/`
+`DELETE /api/v1/projects/<uuid>/collections/<collection_uuid>/`
+```json
+{ "name": "updated_name" }
+```
+
+### List/Create Entries
+`GET /api/v1/projects/<uuid>/collections/<collection_uuid>/entries/?limit=20`
+`POST /api/v1/projects/<uuid>/collections/<collection_uuid>/entries/`
+```json
+{
+  "data": {
+    "title": "Refund Policy",
+    "answer": "7 days refund available."
+  }
+}
+```
+
+### Update/Delete Entry
+`PATCH /api/v1/projects/<uuid>/collections/<collection_uuid>/entries/<entry_uuid>/`
+`DELETE /api/v1/projects/<uuid>/collections/<collection_uuid>/entries/<entry_uuid>/`
+```json
+{
+  "data": {
+    "title": "Refund Policy",
+    "answer": "Refund window is 7 days from purchase."
+  }
+}
+```
+
+---
+
+## Mini CMS (Public Read)
+
+### Read Collection Data Publicly
+`GET /api/collections/public/<collection_slug>/?project_api_key=...&limit=20&page_url=https://example.com/page`
+
+Response:
+```json
+{
+  "success": true,
+  "collection": { "id": "uuid", "name": "faq_items", "slug": "faq_items" },
+  "limit": 20,
+  "entries": [
+    {
+      "id": "uuid",
+      "collection": "uuid",
+      "data": { "title": "Refund", "answer": "7 days" },
+      "created_at": "2026-03-20T12:00:00Z",
+      "updated_at": "2026-03-20T12:00:00Z"
+    }
+  ]
+}
+```
+
+Notes:
+- Public read requires valid `project_api_key`.
+- Allowed domains are enforced.
+- Public response limit is capped (`CMS_PUBLIC_READ_LIMIT_MAX`).
+- Write/read limits and payload-size caps are enforced by settings.
+
+Versioned alias:
+- `GET /api/v1/public/collections/<collection_slug>/?project_api_key=...&limit=20&page_url=...`

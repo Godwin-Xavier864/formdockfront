@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>AuraForm • Elegant Contact</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #f4f7fc 0%, #eef2f8 100%);
+      color: #1a2c3e;
+      margin: 0;
+      padding: 2rem 1.5rem;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* elegant card with subtle blur & depth */
+    .card {
+      max-width: 760px;
+      width: 100%;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(0px);
+      border-radius: 2rem;
+      box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.02), 0 0 0 1px rgba(148, 163, 184, 0.08);
+      transition: box-shadow 0.25s ease, transform 0.2s ease;
+      padding: 2rem 2rem 2.2rem;
+    }
+
+    .card:hover {
+      box-shadow: 0 25px 40px -14px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.02), 0 0 0 1px rgba(148, 163, 184, 0.12);
+    }
+
+    /* header styling — soft and graceful */
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      background: linear-gradient(135deg, #1f3b4c, #2c5a6e);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      margin-bottom: 0.3rem;
+      position: relative;
+      display: inline-block;
+    }
+
+    /* decorative minimal accent line */
+    h1::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 0;
+      width: 54px;
+      height: 3px;
+      background: linear-gradient(90deg, #3b82f6, #a5c9ff);
+      border-radius: 4px;
+    }
+
+    /* spacing and layout elegance */
+    form {
+      margin-top: 1.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    /* label refinement */
+    label {
+      display: block;
+      font-weight: 500;
+      font-size: 0.85rem;
+      letter-spacing: -0.2px;
+      color: #2c4c6c;
+      margin-top: 1rem;
+      margin-bottom: 0.35rem;
+      transition: color 0.2s;
+    }
+
+    /* first label gets reduced top margin */
+    form > label:first-of-type {
+      margin-top: 0;
+    }
+
+    /* inputs & textarea – modern airy fields */
+    input, textarea {
+      width: 100%;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 1.2rem;
+      padding: 0.8rem 1.2rem;
+      font-size: 0.95rem;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-weight: 450;
+      background: #ffffff;
+      transition: all 0.2s ease-in-out;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.01);
+      color: #0f2b3b;
+      outline: none;
+      line-height: 1.4;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+      border-radius: 1.2rem;
+    }
+
+    /* focus state — subtle glow */
+    input:focus, textarea:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+      background-color: #fefefe;
+    }
+
+    /* hover effect for inputs */
+    input:hover, textarea:hover {
+      border-color: #cbd5e1;
+      background-color: #fafcff;
+    }
+
+    /* placeholder styling */
+    input::placeholder, textarea::placeholder {
+      color: #9aaebf;
+      font-weight: 400;
+      font-size: 0.85rem;
+      opacity: 0.8;
+    }
+
+    /* button — dreamy gradient + smooth motion */
+    button {
+      margin-top: 1.8rem;
+      border: none;
+      border-radius: 2.2rem;
+      background: linear-gradient(105deg, #1e4b6e, #2c6282);
+      color: white;
+      padding: 0.85rem 1.6rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+      letter-spacing: 0.2px;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      box-shadow: 0 6px 14px rgba(27, 85, 117, 0.2);
+      width: 100%;
+      font-family: inherit;
+      backdrop-filter: blur(2px);
+    }
+
+    button:hover {
+      background: linear-gradient(105deg, #236a8c, #2f789c);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 20px -8px rgba(27, 85, 117, 0.35);
+    }
+
+    button:active {
+      transform: translateY(1px);
+      transition: 0.05s;
+    }
+
+    button:disabled {
+      opacity: 0.65;
+      transform: none;
+      cursor: not-allowed;
+      background: linear-gradient(105deg, #9bb7ca, #b0c7d8);
+      box-shadow: none;
+    }
+
+    /* result message — elegant feedback panel */
+    .result {
+      margin-top: 1.6rem;
+      padding: 0.9rem 1rem;
+      border-radius: 1.5rem;
+      font-weight: 500;
+      text-align: center;
+      font-size: 0.9rem;
+      backdrop-filter: blur(4px);
+      transition: all 0.2s;
+      letter-spacing: -0.1px;
+      background: #f8fafc;
+      border: 1px solid #eef2f6;
+    }
+
+    .success {
+      background: #e3f7ec;
+      color: #1c6e43;
+      border-left: 5px solid #2b9348;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    }
+
+    .error {
+      background: #ffe9e9;
+      color: #bc3f2e;
+      border-left: 5px solid #e05a4f;
+    }
+
+    /* responsive finesse */
+    @media (max-width: 560px) {
+      body {
+        padding: 1.2rem;
+      }
+      .card {
+        padding: 1.5rem;
+        border-radius: 1.6rem;
+      }
+      h1 {
+        font-size: 1.6rem;
+      }
+      input, textarea {
+        padding: 0.7rem 1rem;
+        font-size: 0.9rem;
+      }
+      button {
+        padding: 0.75rem 1.2rem;
+      }
+    }
+
+    /* subtle spacing between field groups */
+    input + label, textarea + label {
+      margin-top: 1rem;
+    }
+
+    /* optional smooth scroll */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* extra polish: disabled button graceful */
+    .result:empty {
+      display: none;
+    }
+
+    /* micro interaction: focus within label effect */
+    input:focus + label,
+    textarea:focus + label {
+      color: #2563eb;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Contact Us</h1>
+
+    <form id="formdockForm">
+      <label>First Name</label>
+      <input id="firstName" placeholder="John" />
+
+      <label>Last Name</label>
+      <input id="lastName" placeholder="Doe" />
+
+      <label>Email</label>
+      <input id="email" type="email" placeholder="john@example.com" />
+
+      <label>Organization</label>
+      <input id="organization" placeholder="Company" />
+
+      <label>Place</label>
+      <input id="place" placeholder="City" />
+
+      <label>Message</label>
+      <textarea id="message" placeholder="Your message..."></textarea>
+
+      <button type="submit" id="submitBtn">Submit</button>
+    </form>
+
+    <div class="result" id="result"></div>
+  </div>
+
+  
+  <script>
+    const form = document.getElementById("formdockForm");
+    const result = document.getElementById("result");
+    const submitBtn = document.getElementById("submitBtn");
+
+    form.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      submitBtn.disabled = true;
+
+      result.textContent = "Submitting...";
+      result.className = "result";
+
+      const payload = {
+        project_api_key: "YOUR_API_KEY",
+        fields: {
+          first_name: document.getElementById("firstName").value.trim(),
+          last_name: document.getElementById("lastName").value.trim(),
+          email: document.getElementById("email").value.trim(),
+          organization: document.getElementById("organization").value.trim(),
+          place: document.getElementById("place").value.trim(),
+          message: document.getElementById("message").value.trim()
+        },
+        metadata: {
+          page_url: window.location.href,
+          referrer: document.referrer || "",
+          user_agent: navigator.userAgent,
+          timestamp: new Date().toISOString()
+        }
+      };
+
+      try {
+        const response = await fetch("https://api.formdock.in/api/forms/submit/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          result.textContent = "Form submitted successfully ✅";
+          result.className = "result success";
+          form.reset();
+        } else {
+          result.textContent = "Submission failed ❌";
+          result.className = "result error";
+        }
+
+      } catch (error) {
+        result.textContent = "Something went wrong ❌";
+        result.className = "result error";
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

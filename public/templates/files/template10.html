@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Contact Form - Luxury Obsidian Gold</title>
+    <!-- Premium Luxury Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Montserrat:wght@300;400;500&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            /* Luxury Obsidian & Gold Palette */
+            --bg-base: #030303;
+            --bg-card: #0A0A0A;
+            --gold-primary: #D4AF37;
+            /* Classic Metallic Gold */
+            --gold-hover: #F3E5AB;
+            /* Vanilla Gold */
+            --gold-muted: #8C7326;
+            --gold-border: rgba(212, 175, 55, 0.25);
+
+            --text-heading: #D4AF37;
+            --text-body: #EAEAEA;
+            --text-muted: #888888;
+
+            --success-color: #D4AF37;
+            /* Themed success messages */
+            --error-color: #991B1B;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--bg-base);
+            /* Very subtle dark gold ambient glow in the background */
+            background-image: radial-gradient(circle at center, rgba(140, 115, 38, 0.05) 0%, transparent 70%);
+            color: var(--text-body);
+            margin: 0;
+            padding: 60px 24px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 600px;
+            background: var(--bg-card);
+            border: 1px solid var(--gold-border);
+            padding: 60px 50px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9);
+            position: relative;
+        }
+
+        /* Elegant inner border frame */
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            border: 1px solid rgba(212, 175, 55, 0.1);
+            pointer-events: none;
+        }
+
+        .header {
+            margin-bottom: 48px;
+            text-align: center;
+        }
+
+        h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 42px;
+            font-weight: 600;
+            color: var(--text-heading);
+            margin: 0 0 12px 0;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+        }
+
+        .header p {
+            font-size: 14px;
+            font-weight: 300;
+            color: var(--text-muted);
+            margin: 0;
+            line-height: 1.8;
+            letter-spacing: 1px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 36px 28px;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        label {
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--gold-primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 4px;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--gold-border);
+            padding: 10px 0;
+            font-size: 15px;
+            font-family: 'Cormorant Garamond', serif;
+            /* Use serif for input values for high-end look */
+            font-style: italic;
+            font-weight: 500;
+            color: var(--text-body);
+            box-sizing: border-box;
+            transition: all 0.4s ease;
+            border-radius: 0;
+            /* Remove default iOS rounding */
+            -webkit-appearance: none;
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: #333333;
+            font-style: italic;
+        }
+
+        input:hover,
+        textarea:hover {
+            border-bottom: 1px solid rgba(212, 175, 55, 0.6);
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-bottom: 1px solid var(--gold-primary);
+            box-shadow: 0 1px 0 var(--gold-primary);
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 24px;
+            background: transparent;
+            color: var(--gold-primary);
+            border: 1px solid var(--gold-primary);
+            padding: 20px;
+            font-size: 12px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            cursor: pointer;
+            transition: all 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover:not(:disabled) {
+            background: var(--gold-primary);
+            color: #000000;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+        }
+
+        button:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            border-color: var(--text-muted);
+            color: var(--text-muted);
+        }
+
+        .result {
+            margin-top: 32px;
+            padding: 16px;
+            font-size: 13px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
+            border: 1px solid transparent;
+        }
+
+        .result:empty {
+            display: none;
+        }
+
+        .success {
+            color: var(--gold-primary);
+            border-color: var(--gold-border);
+            background: rgba(212, 175, 55, 0.05);
+        }
+
+        .error {
+            color: var(--error-color);
+            border-color: rgba(153, 27, 27, 0.3);
+            background: rgba(153, 27, 27, 0.05);
+        }
+
+        @media (max-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 28px;
+            }
+
+            .card {
+                padding: 40px 30px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <div class="header">
+            <h1>Contact Us</h1>
+            <p>We invite you to reach out and connect.</p>
+        </div>
+
+        <form id="formdockForm" class="form-grid">
+            <div class="input-group">
+                <label for="firstName">First name</label>
+                <input id="firstName" placeholder="John" />
+            </div>
+
+            <div class="input-group">
+                <label for="lastName">Last name</label>
+                <input id="lastName" placeholder="Doe" />
+            </div>
+
+            <div class="input-group full-width">
+                <label for="email">Email address</label>
+                <input id="email" type="email" placeholder="john@example.com" />
+            </div>
+
+            <div class="input-group">
+                <label for="organization">Organization</label>
+                <input id="organization" placeholder="Company inc" />
+            </div>
+
+            <div class="input-group">
+                <label for="place">Place</label>
+                <input id="place" placeholder="City" />
+            </div>
+
+            <div class="input-group full-width">
+                <label for="message">Message</label>
+                <textarea id="message" placeholder="How may we assist you?"></textarea>
+            </div>
+
+            <div class="full-width">
+                <button type="submit" id="submitBtn">Send Message</button>
+            </div>
+        </form>
+
+        <div class="result" id="result"></div>
+    </div>
+
+    <!-- The original JavaScript code remains completely unchanged. -->
+    <script>
+        const form = document.getElementById("formdockForm");
+        const result = document.getElementById("result");
+        const submitBtn = document.getElementById("submitBtn");
+
+        form.addEventListener("submit", async function (event) {
+            event.preventDefault();
+            submitBtn.disabled = true;
+
+            result.textContent = "Submitting...";
+            result.className = "result";
+
+            const payload = {
+                project_api_key: "YOUR_API_KEY",
+                fields: {
+                    first_name: document.getElementById("firstName").value.trim(),
+                    last_name: document.getElementById("lastName").value.trim(),
+                    email: document.getElementById("email").value.trim(),
+                    organization: document.getElementById("organization").value.trim(),
+                    place: document.getElementById("place").value.trim(),
+                    message: document.getElementById("message").value.trim()
+                },
+                metadata: {
+                    page_url: window.location.href,
+                    referrer: document.referrer || "",
+                    user_agent: navigator.userAgent,
+                    timestamp: new Date().toISOString()
+                }
+            };
+
+            try {
+                const response = await fetch("https://api.formdock.in/api/forms/submit/", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    result.textContent = "Form submitted successfully ✅";
+                    result.className = "result success";
+                    form.reset();
+                } else {
+                    result.textContent = "Submission failed ❌";
+                    result.className = "result error";
+                }
+
+            } catch (error) {
+                result.textContent = "Something went wrong ❌";
+                result.className = "result error";
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>

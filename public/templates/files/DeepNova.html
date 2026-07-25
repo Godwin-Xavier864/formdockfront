@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>DeepNova • dark blue modern form</title>
+  
+  <!-- modern font stack -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;
+      background: #0a1927;  /* deep dark blue-black base */
+      background: linear-gradient(135deg, #0a1927 0%, #0b1c2a 100%);
+      color: #e2eaf1;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    /* modern card – deep navy, elevated */
+    .card {
+      max-width: 780px;
+      width: 100%;
+      background: #0f2a3b;
+      background: linear-gradient(145deg, #112c3e 0%, #0e2433 100%);
+      border-radius: 1.5rem;
+      box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.4), 0 1px 0px rgba(255, 255, 255, 0.05) inset;
+      padding: 2rem 2rem 2.2rem;
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+      border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .card:hover {
+      box-shadow: 0 25px 40px -14px rgba(0, 0, 0, 0.5);
+      transform: translateY(-2px);
+    }
+
+    /* modern title – clean with subtle accent */
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: #ecf5ff;
+      margin-bottom: 0.25rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #1e4a6e;
+      display: inline-block;
+    }
+
+    form {
+      margin-top: 1.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    /* labels – soft, modern */
+    label {
+      font-weight: 500;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #9ab3cf;
+      margin-top: 1rem;
+      margin-bottom: 0.3rem;
+    }
+
+    form > label:first-of-type {
+      margin-top: 0;
+    }
+
+    /* inputs – dark mode friendly, subtle border */
+    input, textarea {
+      width: 100%;
+      border: 1px solid #2a4b6e;
+      border-radius: 0.75rem;
+      padding: 0.8rem 1rem;
+      font-size: 0.95rem;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-weight: 450;
+      background: #0c1f2c;
+      color: #eef4ff;
+      transition: all 0.2s ease;
+      outline: none;
+      line-height: 1.4;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    /* focus state – bright blue ring */
+    input:focus, textarea:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+      background-color: #102a3a;
+    }
+
+    input:hover, textarea:hover {
+      border-color: #3b82f6;
+      background-color: #112f41;
+    }
+
+    ::placeholder {
+      color: #5f7f9e;
+      font-weight: 400;
+      font-size: 0.85rem;
+    }
+
+    /* button – vivid dark blue to electric blue gradient */
+    button {
+      margin-top: 1.8rem;
+      border: none;
+      border-radius: 0.85rem;
+      background: linear-gradient(95deg, #1e4b6e, #2563eb);
+      color: white;
+      padding: 0.85rem 1.4rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+      letter-spacing: 0.2px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      width: 100%;
+      font-family: inherit;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    button:hover {
+      background: linear-gradient(95deg, #2563eb, #3b82f6);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(37, 99, 235, 0.3);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      transform: none;
+      cursor: not-allowed;
+      background: #2d4a6e;
+      box-shadow: none;
+    }
+
+    /* result messages – adapted for dark theme */
+    .result {
+      margin-top: 1.5rem;
+      padding: 0.8rem 1rem;
+      border-radius: 0.75rem;
+      font-weight: 500;
+      font-size: 0.9rem;
+      text-align: center;
+      background: #0e2634;
+      border: 1px solid #2a4b6e;
+      transition: all 0.2s;
+      color: #d6e6ff;
+    }
+
+    .success {
+      background: #0c2e28;
+      color: #a7f0c2;
+      border-left: 4px solid #2b9348;
+      border-color: #2b9348;
+    }
+
+    .error {
+      background: #2a1a1f;
+      color: #ffb4b4;
+      border-left: 4px solid #e05a4f;
+      border-color: #e05a4f;
+    }
+
+    /* responsive */
+    @media (max-width: 600px) {
+      body {
+        padding: 1rem;
+      }
+      .card {
+        padding: 1.5rem;
+        border-radius: 1.25rem;
+      }
+      h1 {
+        font-size: 1.5rem;
+      }
+      input, textarea {
+        padding: 0.7rem 0.9rem;
+      }
+      button {
+        padding: 0.75rem 1rem;
+      }
+    }
+
+    .result:empty {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Contact Us</h1>
+
+    <form id="formdockForm">
+      <label>First Name</label>
+      <input id="firstName" placeholder="John" />
+
+      <label>Last Name</label>
+      <input id="lastName" placeholder="Doe" />
+
+      <label>Email</label>
+      <input id="email" type="email" placeholder="john@example.com" />
+
+      <label>Organization</label>
+      <input id="organization" placeholder="Company" />
+
+      <label>Place</label>
+      <input id="place" placeholder="City" />
+
+      <label>Message</label>
+      <textarea id="message" placeholder="Your message..."></textarea>
+
+      <button type="submit" id="submitBtn">Submit</button>
+    </form>
+
+    <div class="result" id="result"></div>
+  </div>
+
+  
+  <script>
+    const form = document.getElementById("formdockForm");
+    const result = document.getElementById("result");
+    const submitBtn = document.getElementById("submitBtn");
+
+    form.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      submitBtn.disabled = true;
+
+      result.textContent = "Submitting...";
+      result.className = "result";
+
+      const payload = {
+        project_api_key: "YOUR_API_KEY",
+        fields: {
+          first_name: document.getElementById("firstName").value.trim(),
+          last_name: document.getElementById("lastName").value.trim(),
+          email: document.getElementById("email").value.trim(),
+          organization: document.getElementById("organization").value.trim(),
+          place: document.getElementById("place").value.trim(),
+          message: document.getElementById("message").value.trim()
+        },
+        metadata: {
+          page_url: window.location.href,
+          referrer: document.referrer || "",
+          user_agent: navigator.userAgent,
+          timestamp: new Date().toISOString()
+        }
+      };
+
+      try {
+        const response = await fetch("https://api.formdock.in/api/forms/submit/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          result.textContent = "Form submitted successfully ✅";
+          result.className = "result success";
+          form.reset();
+        } else {
+          result.textContent = "Submission failed ";
+          result.className = "result error";
+        }
+
+      } catch (error) {
+        result.textContent = "Something went wrong ";
+        result.className = "result error";
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
