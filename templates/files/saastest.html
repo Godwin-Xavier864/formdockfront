@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Contact Us</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 1000px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            color: white;
+        }
+
+        .contact-info h2 {
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+
+        .contact-info p {
+            margin-bottom: 20px;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .info-item {
+            margin-bottom: 15px;
+        }
+
+        .info-item span {
+            font-weight: 600;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: none;
+            outline: none;
+            font-size: 14px;
+        }
+
+        textarea {
+            resize: none;
+            height: 120px;
+        }
+
+        button {
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            background: white;
+            color: #764ba2;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+
+        button:hover {
+            background: #f1f1f1;
+            transform: translateY(-3px);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Contact Info -->
+    <div class="contact-info">
+        <h2>Contact Us</h2>
+        <p>Have questions or want to work together? Fill out the form and our team will get back to you within 24 hours.</p>
+
+        <div class="info-item">
+            <span>Email:</span> support@example.com
+        </div>
+        <div class="info-item">
+            <span>Phone:</span> +91 98765 43210
+        </div>
+        <div class="info-item">
+            <span>Address:</span> Bangalore, India
+        </div>
+    </div>
+
+    <!-- Contact Form -->
+    <form id="contactForm">
+        <div class="input-group">
+            <input type="text" id="name" placeholder="Full Name" required>
+        </div>
+
+        <div class="input-group">
+            <input type="email" id="email" placeholder="Email Address" required>
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="subject" placeholder="Subject" required>
+        </div>
+
+        <div class="input-group">
+            <textarea id="message" placeholder="Your Message" required></textarea>
+        </div>
+
+        <button type="submit" id="submitBtn">Send Message</button>
+        <div id="status" style="margin-top: 15px; display: none; padding: 10px; border-radius: 5px;"></div>
+    </form>
+
+</div>
+
+</body>
+
+<script>
+// FormDocks API Configuration
+// IMPORTANT: Replace with your actual API base URL and project API key
+const API_BASE_URL = 'http://localhost:8000'; // Change to your backend URL
+const PROJECT_API_KEY = 'YOUR_FORM_API_KEY_HERE'; // Get this from your FormDocks project dashboard
+
+document.getElementById('contactForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const statusDiv = document.getElementById('status');
+    const submitBtn = document.getElementById('submitBtn');
+    const originalBtnText = submitBtn.textContent;
+    
+    // Get form data
+    const formData = {
+        full_name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        subject: document.getElementById('subject').value,
+        message: document.getElementById('message').value,
+    };
+    
+    // Validate API key
+    if (PROJECT_API_KEY === 'YOUR_FORM_API_KEY_HERE' || !PROJECT_API_KEY) {
+        statusDiv.style.display = 'block';
+        statusDiv.style.backgroundColor = '#ffcdd2';
+        statusDiv.style.color = '#c62828';
+        statusDiv.textContent = '❌ Error: Please update PROJECT_API_KEY in the script. Get it from your FormDocks project dashboard.';
+        return;
+    }
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+    statusDiv.style.display = 'block';
+    statusDiv.style.backgroundColor = '#e3f2fd';
+    statusDiv.style.color = '#1565c0';
+    statusDiv.textContent = '⏳ Sending your message...';
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/forms/submit/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                project_api_key: PROJECT_API_KEY,
+                fields: formData,
+                metadata: {
+                    page_url: window.location.href,
+                    referrer: document.referrer || 'direct',
+                    user_agent: navigator.userAgent,
+                    timestamp: new Date().toISOString(),
+                },
+            }),
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to submit form');
+        }
+        
+        // Success
+        statusDiv.style.backgroundColor = '#c8e6c9';
+        statusDiv.style.color = '#2e7d32';
+        statusDiv.textContent = `✓ Thank you! Your message has been received. (ID: ${data.enquiry_id})`;
+        
+        // Reset form
+        document.getElementById('contactForm').reset();
+        
+        // Re-enable button
+        setTimeout(() => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+            statusDiv.style.display = 'none';
+        }, 3000);
+        
+    } catch (error) {
+        statusDiv.style.backgroundColor = '#ffcdd2';
+        statusDiv.style.color = '#c62828';
+        statusDiv.textContent = `❌ Error: ${error.message}`;
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText;
+    }
+});
+</script>
+
+</html>
+

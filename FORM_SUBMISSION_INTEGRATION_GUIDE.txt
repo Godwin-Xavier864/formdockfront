@@ -1,0 +1,54 @@
+================================================================================
+                  FORMDOCK FORM SUBMISSION INTEGRATION GUIDE
+================================================================================
+Document Version: 1.0.0
+API Version: v1
+Target Audience: Web Developers, Form Builders, Frontend Integrators
+
+--------------------------------------------------------------------------------
+1. OVERVIEW
+--------------------------------------------------------------------------------
+Formdock provides a backend-as-a-service endpoint for capturing web form submissions
+without writing server code. You can turn any static HTML form, React form, Webflow
+form, or custom frontend component into a fully functional contact, lead generation,
+or enquiry capture form.
+
+--------------------------------------------------------------------------------
+2. AUTHENTICATION & CREDENTIALS
+--------------------------------------------------------------------------------
+Public form submissions require your project's Public API Key.
+
+- Public API Key Identifier: public_api_key
+- Location: Available in your Formdock Project Dashboard.
+- Security: Safe to expose in client-side HTML and JavaScript code.
+
+--------------------------------------------------------------------------------
+3. ENDPOINT SPECIFICATION
+--------------------------------------------------------------------------------
+
+Endpoint URL: POST /api/v1/public/forms/submit/
+Content-Type: application/json
+
+Request Body Parameters:
+  - project_api_key (string, required): Your project's public API key.
+  - fields (object, required): Key-value dictionary containing form field data.
+  - metadata (object, optional): Tracking data (e.g. referrer, page URL, UTM params).
+
+Example Request Body (JSON):
+{
+  "project_api_key": "fd_pub_1234567890abcdef",
+  "fields": {
+    "name": "Jane Doe",
+    "email": "jane@example.com",
+    "phone": "+919876543210",
+    "message": "Interested in enterprise pricing."
+  }
+}
+
+Successful Response (HTTP 201 Created):
+{
+  "success": true,
+  "message": "Form submission received successfully.",
+  "enquiry_id": "c712b806-1e2a-4b71-bae3-d3386a266a8e"
+}
+================================================================================

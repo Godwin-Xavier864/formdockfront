@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-09-06T11:34:07.607Z",
+  "templates": [
+    {
+      "id": "contact-clean",
+      "name": "Contact Clean",
+      "category": "General",
+      "description": "Contact Clean template",
+      "path": "templates/files/contact-clean.html"
+    },
+    {
+      "id": "saastest",
+      "name": "Saastest",
+      "category": "General",
+      "description": "Saastest template",
+      "path": "templates/files/saastest.html"
+    }
+  ]
+}

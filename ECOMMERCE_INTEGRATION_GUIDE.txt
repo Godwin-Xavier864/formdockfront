@@ -1,0 +1,139 @@
+================================================================================
+           FORMDOCK E-COMMERCE, PRODUCT LISTING & ORDER PLACEMENT GUIDE
+================================================================================
+Document Version: 1.1.0
+API Version: v1
+Target Audience: Store Developers, E-Commerce Integrators, Frontend Engineers
+
+--------------------------------------------------------------------------------
+1. OVERVIEW
+--------------------------------------------------------------------------------
+Formdock E-Commerce provides lightweight, high-performance APIs for displaying product
+catalogs, reserving real-time stock, creating orders, tracking shipments, and allowing
+customer order cancellations.
+
+Key System Features:
+- Custom Product Categories & Sub-Categories: Custom category and sub-category classification.
+- Arbitrary Product Variants: Turn variants on/off and define custom attributes (e.g. Colour, Size for Clothes; Storage, RAM, Colour for Electronics).
+- Extended Image Uploads: Up to 6 product/variant images per item.
+- Atomic Stock Lock: Prevents over-selling during flash sales via Redis stock locking.
+- Order Tracking Magic Link: Generates customer tracking URLs instantly on checkout.
+- Subscription Gating: Automatically blocks order creation if store subscription is expired.
+- Conditional Cancellation: Buyers can cancel orders before dispatch; stock is auto-restored.
+- Automated Data Retention: Orders marked completed/delivered are automatically purged after 7 days.
+
+--------------------------------------------------------------------------------
+2. AUTHENTICATION & CREDENTIALS
+--------------------------------------------------------------------------------
+- Store API Key: `store_api_key` (Found in your Store Management Settings).
+- Tracking Token: UUID generated automatically per order (e.g. `c712b806-1e2a-4b71-bae3-d3386a266a8e`).
+
+--------------------------------------------------------------------------------
+3. ENDPOINT SPECIFICATIONS
+--------------------------------------------------------------------------------
+
+3.1 PUBLIC PRODUCT LISTING ENDPOINT
+-----------------------------------
+Endpoint URL: GET /api/v1/public/products/list/
+Header or Query Parameter: store_api_key or project_id (string, required)
+
+Example Request:
+  GET /api/v1/public/products/list/?store_api_key=fd_store_9876543210fedcba
+
+Successful Response (HTTP 200 OK):
+[
+  {
+    "id": "8315974d-cfc7-4eb1-b086-e102bc5fd14d",
+    "name": "Galaxy S24 Ultra",
+    "description": "256GB Storage, 12GB RAM flagship smartphone.",
+    "price": "129999.00",
+    "stock": 14,
+    "category": "Electronics",
+    "sub_category": "Smartphones",
+    "has_variants": true,
+    "variants": [
+      { "name": "Storage", "options": ["256GB", "512GB", "1TB"] },
+      { "name": "RAM", "options": ["12GB"] },
+      { "name": "Color", "options": ["Titanium Black", "Titanium Gray"] }
+    ],
+    "image_url_1": "https://cdn.formdock.in/products/sample1.jpg",
+    "image_url_2": "https://cdn.formdock.in/products/sample2.jpg",
+    "image_url_3": "https://cdn.formdock.in/products/sample3.jpg",
+    "image_url_4": "https://cdn.formdock.in/products/sample4.jpg",
+    "image_url_5": "https://cdn.formdock.in/products/sample5.jpg",
+    "image_url_6": "https://cdn.formdock.in/products/sample6.jpg",
+    "created_at": "2026-08-20T10:00:00Z"
+  }
+]
+
+
+3.2 PUBLIC ORDER CREATION ENDPOINT (CHECKOUT)
+---------------------------------------------
+Endpoint URL: POST /api/v1/public/orders/create/
+Content-Type: application/json
+
+Request Body Parameters:
+  - store_api_key (string, required): Your store's public API key.
+  - product_id (uuid, required): The ID of the product being purchased.
+  - quantity (integer, optional, default: 1): Quantity requested.
+  - selected_variant (object, optional): Arbitrary key-value variant choices matching product attributes (e.g. {"Storage": "256GB", "Color": "Titanium Black"} or {"Size": "XL", "Colour": "Red"}).
+  - customer_name (string, required): Customer full name.
+  - customer_email (email, required): Customer email address.
+  - customer_phone (string, optional): Customer phone number.
+  - shipping_address (string, optional): Complete shipping address string.
+  - address_line1, city, state, pincode (strings, optional): Structured address components.
+
+Example Request Body - Electronics (JSON):
+{
+  "store_api_key": "fd_store_9876543210fedcba",
+  "product_id": "8315974d-cfc7-4eb1-b086-e102bc5fd14d",
+  "quantity": 1,
+  "selected_variant": {
+    "Storage": "256GB",
+    "RAM": "12GB",
+    "Color": "Titanium Black"
+  },
+  "customer_name": "Jane Smith",
+  "customer_email": "jane@example.com",
+  "customer_phone": "+919876543210",
+  "address_line1": "Flat 402, Highrise Towers",
+  "city": "Mumbai",
+  "state": "Maharashtra",
+  "pincode": "400001"
+}
+
+Example Request Body - Clothing (JSON):
+{
+  "store_api_key": "fd_store_9876543210fedcba",
+  "product_id": "9426885e-df42-4fc2-b197-f201bc6fd25e",
+  "quantity": 2,
+  "selected_variant": {
+    "Size": "L",
+    "Colour": "Navy Blue"
+  },
+  "customer_name": "Alex Johnson",
+  "customer_email": "alex@example.com",
+  "shipping_address": "123 Main St, Bengaluru, 560001"
+}
+
+Successful Response (HTTP 201 Created):
+{
+  "success": true,
+  "order_id": "1943e63a-df31-4771-a18d-4280bfd2e218",
+  "total_price": 129999.00,
+  "tracking_token": "77dd5fe2-6c0a-419c-b941-78c56bee74cd",
+  "magic_link": "https://formdock.in/orders/track/77dd5fe2-6c0a-419c-b941-78c56bee74cd",
+  "status": "pending"
+}
+
+Error Response - Out of Stock (HTTP 400 Bad Request):
+{
+  "success": false,
+  "error": "Insufficient stock available for this product."
+}
+
+Error Response - Expired Merchant Subscription (HTTP 403 Forbidden):
+{
+  "success": false,
+  "error": "Store subscription has expired. Orders cannot be accepted at this time."
+}

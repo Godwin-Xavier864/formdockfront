@@ -1,0 +1,58 @@
+================================================================================
+                        FORMDOCK CMS INTEGRATION GUIDE
+================================================================================
+Document Version: 1.0.0
+API Version: v1
+Target Audience: Frontend Developers, Full-Stack Engineers, Content Managers
+
+--------------------------------------------------------------------------------
+1. OVERVIEW
+--------------------------------------------------------------------------------
+Formdock CMS allows developers to manage flexible, headless JSON data structures
+called "Collections" and "Collection Entries". You can use Formdock CMS to power
+dynamic website sections such as blog posts, team directories, testimonials, pricing
+tables, real estate listings, or product catalogs.
+
+--------------------------------------------------------------------------------
+2. AUTHENTICATION & CREDENTIALS
+--------------------------------------------------------------------------------
+- Public Read Access: Requires `project_api_key` (your project's public API key).
+- Merchant Management Access: Requires JWT Bearer Token (`Authorization: Bearer <token>`).
+
+--------------------------------------------------------------------------------
+3. ENDPOINT SPECIFICATION
+--------------------------------------------------------------------------------
+
+3.1 PUBLIC COLLECTION READ ENDPOINT (HEADLESS FRONTEND API)
+------------------------------------------------------------
+Endpoint URL: GET /api/v1/public/collections/{collection_slug}/
+Alternative URL: GET /api/collections/public/{collection_slug}/
+Authentication: None (Public API Key passed via query parameter)
+
+Query Parameters:
+  - project_api_key (string, required): Your project's public API key.
+  - limit (integer, optional): Number of entries to retrieve (Default: 20, Max: 100).
+  - page_url (string, optional): Contextual filtering url.
+
+Example Request:
+  GET /api/v1/public/collections/blog-posts/?project_api_key=fd_pub_1234567890abcdef&limit=10
+
+Successful Response (HTTP 200 OK):
+{
+  "success": true,
+  "collection": "blog-posts",
+  "count": 2,
+  "entries": [
+    {
+      "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+      "data": {
+        "title": "Welcome to Our Platform",
+        "author": "Jane Doe",
+        "content": "This is our inaugural blog post...",
+        "published_at": "2026-08-20"
+      },
+      "created_at": "2026-08-20T10:00:00Z"
+    }
+  ]
+}
+================================================================================

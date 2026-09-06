@@ -1,0 +1,114 @@
+================================================================================
+                     FORMDOCK AI FAQ CHATBOT INTEGRATION GUIDE
+================================================================================
+Document Version: 1.0.0
+API Version: v1
+Target Audience: Web Developers, Product Engineers, Frontend Integrators
+
+--------------------------------------------------------------------------------
+1. OVERVIEW
+--------------------------------------------------------------------------------
+The Formdock AI FAQ Chatbot API enables seamless integration of an AI-powered
+conversational agent into any website, web application, or mobile app. The chatbot
+leverages your project's custom FAQ configuration, business summary, key points,
+and optionally your CMS collections knowledge base to answer visitor queries in real time.
+
+--------------------------------------------------------------------------------
+2. AUTHENTICATION & CREDENTIALS
+--------------------------------------------------------------------------------
+Public requests to the AI FAQ Chatbot require your project's FAQ API Key.
+
+- FAQ API Key Identifier: faq_public_api_key
+- Location: Available in your Formdock Project Dashboard under Project Settings.
+- Security Note: Your `faq_public_api_key` is safe to expose in client-side HTML
+  and JavaScript code.
+
+--------------------------------------------------------------------------------
+3. ENDPOINT SPECIFICATION
+--------------------------------------------------------------------------------
+
+3.1 PUBLIC FAQ CHAT ENDPOINT (NO AUTHENTICATION REQUIRED)
+---------------------------------------------------------
+Endpoint URL: POST /api/v1/public/faq/chat/
+Alternative URL: POST /api/public/faq/chat/
+Content-Type: application/json
+
+Request Headers:
+  Content-Type: application/json
+
+Request Body Parameters:
+  - faq_api_key (string, required): Your project's FAQ public API key.
+  - question (string, required): The visitor's question text.
+  - include_collections (boolean, optional): Set to true to include CMS collection data
+    in the AI context. Default: false.
+  - metadata (object, optional): Arbitrary key-value pairs for analytics/tracking.
+
+Example Request Body (JSON):
+{
+  "faq_api_key": "fd_faq_9876543210fedcba",
+  "question": "What are your business hours and refund policy?",
+  "include_collections": true,
+  "metadata": {
+    "page_url": "https://example.com/pricing",
+    "user_agent": "Mozilla/5.0..."
+  }
+}
+
+Successful Response (HTTP 200 OK):
+{
+  "success": true,
+  "answer": "Our business hours are Monday through Friday, 9:00 AM to 6:00 PM IST. We offer a full 14-day money-back guarantee on all subscription plans.",
+  "tokens_used": 142
+}
+
+Error Response - Missing Parameters (HTTP 400 Bad Request):
+{
+  "detail": "faq_api_key and question are required."
+}
+
+Error Response - Rate Limit Exceeded (HTTP 429 Too Many Requests):
+{
+  "success": false,
+  "error": "Rate limit exceeded. Please wait a few minutes before asking another question."
+}
+
+--------------------------------------------------------------------------------
+4. STEP-BY-STEP INTEGRATION CODE SNIPPETS
+--------------------------------------------------------------------------------
+
+4.1 JAVASCRIPT FETCH INTEGRATION (BROWSER / REACT / VUE / SVELTE)
+------------------------------------------------------------------
+async function askFaqChatbot(userQuestion) {
+  const API_URL = 'https://api.formdock.in/api/v1/public/faq/chat/';
+  const FAQ_API_KEY = 'YOUR_FAQ_PUBLIC_API_KEY';
+
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        faq_api_key: FAQ_API_KEY,
+        question: userQuestion,
+        include_collections: true,
+        metadata: {
+          page_url: window.location.href,
+        }
+      }),
+    });
+
+    const data = await response.json();
+    if (response.ok && data.success) {
+      console.log('AI Answer:', data.answer);
+      return data.answer;
+    } else {
+      console.error('FAQ Error:', data.error || data.detail);
+      return 'Sorry, I could not process your question at this time.';
+    }
+  } catch (err) {
+    console.error('Network Error:', err);
+    return 'Connection error. Please try again.';
+  }
+}
+================================================================================
