@@ -1,32 +1,24 @@
 ================================================================================
            FORMDOCK E-COMMERCE, PRODUCT LISTING & ORDER PLACEMENT GUIDE
 ================================================================================
-Document Version: 1.1.0
+Document Version: 1.2.0
 API Version: v1
 Target Audience: Store Developers, E-Commerce Integrators, Frontend Engineers
 
 --------------------------------------------------------------------------------
-1. OVERVIEW
+1. OVERVIEW & BASE URL
 --------------------------------------------------------------------------------
-Formdock E-Commerce provides lightweight, high-performance APIs for displaying product
-catalogs, reserving real-time stock, creating orders, tracking shipments, and allowing
-customer order cancellations.
+Formdock E-Commerce provides lightweight APIs for displaying product catalogs,
+reserving stock, handling Cash on Delivery (COD) and Razorpay Online Payments (BYOPG),
+verifying signatures, and tracking order delivery.
 
-Key System Features:
-- Custom Product Categories & Sub-Categories: Custom category and sub-category classification.
-- Arbitrary Product Variants: Turn variants on/off and define custom attributes (e.g. Colour, Size for Clothes; Storage, RAM, Colour for Electronics).
-- Extended Image Uploads: Up to 6 product/variant images per item.
-- Atomic Stock Lock: Prevents over-selling during flash sales via Redis stock locking.
-- Order Tracking Magic Link: Generates customer tracking URLs instantly on checkout.
-- Subscription Gating: Automatically blocks order creation if store subscription is expired.
-- Conditional Cancellation: Buyers can cancel orders before dispatch; stock is auto-restored.
-- Automated Data Retention: Orders marked completed/delivered are automatically purged after 7 days.
+Base URL (Production): https://api.formdock.in
 
 --------------------------------------------------------------------------------
 2. AUTHENTICATION & CREDENTIALS
 --------------------------------------------------------------------------------
-- Store API Key: `store_api_key` (Found in your Store Management Settings).
-- Tracking Token: UUID generated automatically per order (e.g. `c712b806-1e2a-4b71-bae3-d3386a266a8e`).
+- Store API Key: `store_api_key` (Found in your Store Configuration settings).
+- Razorpay Merchant Webhook URL: https://api.formdock.in/api/v1/store/webhooks/razorpay/
 
 --------------------------------------------------------------------------------
 3. ENDPOINT SPECIFICATIONS
@@ -34,65 +26,73 @@ Key System Features:
 
 3.1 PUBLIC PRODUCT LISTING ENDPOINT
 -----------------------------------
-Endpoint URL: GET /api/v1/public/products/list/
-Header or Query Parameter: store_api_key or project_id (string, required)
+Endpoint URL: GET https://api.formdock.in/api/v1/public/products/list/
+Query Parameter: store_api_key or project_id (string, required)
 
 Example Request:
-  GET /api/v1/public/products/list/?store_api_key=fd_store_9876543210fedcba
+  GET https://api.formdock.in/api/v1/public/products/list/?store_api_key=fd_store_9876543210fedcba
 
 Successful Response (HTTP 200 OK):
-[
-  {
+{
+  "success": true,
+  "store": {
     "id": "8315974d-cfc7-4eb1-b086-e102bc5fd14d",
-    "name": "Galaxy S24 Ultra",
-    "description": "256GB Storage, 12GB RAM flagship smartphone.",
-    "price": "129999.00",
-    "stock": 14,
-    "category": "Electronics",
-    "sub_category": "Smartphones",
-    "has_variants": true,
-    "variants": [
-      { "name": "Storage", "options": ["256GB", "512GB", "1TB"] },
-      { "name": "RAM", "options": ["12GB"] },
-      { "name": "Color", "options": ["Titanium Black", "Titanium Gray"] }
-    ],
-    "image_url_1": "https://cdn.formdock.in/products/sample1.jpg",
-    "image_url_2": "https://cdn.formdock.in/products/sample2.jpg",
-    "image_url_3": "https://cdn.formdock.in/products/sample3.jpg",
-    "image_url_4": "https://cdn.formdock.in/products/sample4.jpg",
-    "image_url_5": "https://cdn.formdock.in/products/sample5.jpg",
-    "image_url_6": "https://cdn.formdock.in/products/sample6.jpg",
-    "created_at": "2026-08-20T10:00:00Z"
-  }
-]
-
+    "name": "My Store",
+    "accept_cod": true,
+    "accept_online": true,
+    "razorpay_enabled": true,
+    "razorpay_key_id": "rzp_live_1234567890"
+  },
+  "products": [
+    {
+      "id": "8315974d-cfc7-4eb1-b086-e102bc5fd14d",
+      "name": "Galaxy S24 Ultra",
+      "description": "256GB Storage flagship smartphone.",
+      "price": 129999.00,
+      "stock": 14,
+      "category": "Electronics",
+      "sub_category": "Smartphones",
+      "has_variants": true,
+      "variants": [
+        { "name": "Storage", "options": ["256GB", "512GB"] }
+      ],
+      "image_url_1": "https://cdn.formdock.in/products/sample1.jpg",
+      "created_at": "2026-08-20T10:00:00Z"
+    }
+  ]
+}
 
 3.2 PUBLIC ORDER CREATION ENDPOINT (CHECKOUT)
 ---------------------------------------------
-Endpoint URL: POST /api/v1/public/orders/create/
+Endpoint URL: POST https://api.formdock.in/api/v1/public/orders/create/
 Content-Type: application/json
 
 Request Body Parameters:
   - store_api_key (string, required): Your store's public API key.
   - product_id (uuid, required): The ID of the product being purchased.
   - quantity (integer, optional, default: 1): Quantity requested.
-  - selected_variant (object, optional): Arbitrary key-value variant choices matching product attributes (e.g. {"Storage": "256GB", "Color": "Titanium Black"} or {"Size": "XL", "Colour": "Red"}).
+  - payment_method (string, optional): "cash" (COD) or "online" (Razorpay). Default: "cash".
+  - coupon_code (string, optional): Promotional coupon code (e.g. "SAVE10").
+  - selected_variant (object, optional): Key-value variant choices (e.g. {"Storage": "256GB"}).
   - customer_name (string, required): Customer full name.
   - customer_email (email, required): Customer email address.
   - customer_phone (string, optional): Customer phone number.
-  - shipping_address (string, optional): Complete shipping address string.
-  - address_line1, city, state, pincode (strings, optional): Structured address components.
+  - shipping_address (string, optional*): Complete single-line shipping address.
+  - address_line1 (string, optional*): Street address / house number (used with structured address).
+  - city (string, optional*): City name (used with structured address).
+  - state (string, optional*): State or province (used with structured address).
+  - pincode (string, optional*): Postal / ZIP code (used with structured address).
 
-Example Request Body - Electronics (JSON):
+*Note on Shipping Address: You can supply either a full 'shipping_address' string OR structured address fields ('address_line1' and 'pincode' required, plus optional 'city' and 'state'). Structured fields are automatically concatenated into 'shipping_address'.
+
+Example Request Body (Online Payment with Coupon & Structured Address):
 {
   "store_api_key": "fd_store_9876543210fedcba",
   "product_id": "8315974d-cfc7-4eb1-b086-e102bc5fd14d",
   "quantity": 1,
-  "selected_variant": {
-    "Storage": "256GB",
-    "RAM": "12GB",
-    "Color": "Titanium Black"
-  },
+  "payment_method": "online",
+  "coupon_code": "SAVE10",
+  "selected_variant": { "Storage": "256GB" },
   "customer_name": "Jane Smith",
   "customer_email": "jane@example.com",
   "customer_phone": "+919876543210",
@@ -102,38 +102,59 @@ Example Request Body - Electronics (JSON):
   "pincode": "400001"
 }
 
-Example Request Body - Clothing (JSON):
-{
-  "store_api_key": "fd_store_9876543210fedcba",
-  "product_id": "9426885e-df42-4fc2-b197-f201bc6fd25e",
-  "quantity": 2,
-  "selected_variant": {
-    "Size": "L",
-    "Colour": "Navy Blue"
-  },
-  "customer_name": "Alex Johnson",
-  "customer_email": "alex@example.com",
-  "shipping_address": "123 Main St, Bengaluru, 560001"
-}
-
-Successful Response (HTTP 201 Created):
+Successful Response - Online Payment (HTTP 201 Created):
 {
   "success": true,
   "order_id": "1943e63a-df31-4771-a18d-4280bfd2e218",
   "total_price": 129999.00,
   "tracking_token": "77dd5fe2-6c0a-419c-b941-78c56bee74cd",
   "magic_link": "https://formdock.in/orders/track/77dd5fe2-6c0a-419c-b941-78c56bee74cd",
-  "status": "pending"
+  "status": "pending",
+  "payment_method": "online",
+  "razorpay": {
+    "order_id": "order_K1x928374619",
+    "key_id": "rzp_live_1234567890",
+    "amount": 12999900,
+    "currency": "INR",
+    "name": "My Store"
+  }
 }
 
-Error Response - Out of Stock (HTTP 400 Bad Request):
+3.3 PUBLIC PAYMENT VERIFICATION ENDPOINT
+-----------------------------------------
+Endpoint URL: POST https://api.formdock.in/api/v1/public/orders/{order_id}/verify-payment/
+Content-Type: application/json
+
+Request Body Parameters:
+  - razorpay_order_id (string, required): Razorpay order ID returned from checkout.
+  - razorpay_payment_id (string, required): Payment ID returned by Razorpay Checkout modal.
+  - razorpay_signature (string, required): HMAC signature returned by Razorpay Checkout modal.
+
+Example Request Body:
 {
-  "success": false,
-  "error": "Insufficient stock available for this product."
+  "razorpay_order_id": "order_K1x928374619",
+  "razorpay_payment_id": "pay_K1x998877665",
+  "razorpay_signature": "a8f9b2c3d4e5f67890..."
 }
 
-Error Response - Expired Merchant Subscription (HTTP 403 Forbidden):
+Successful Response (HTTP 200 OK):
 {
-  "success": false,
-  "error": "Store subscription has expired. Orders cannot be accepted at this time."
+  "success": true,
+  "message": "Payment verified successfully.",
+  "order_id": "1943e63a-df31-4771-a18d-4280bfd2e218",
+  "tracking_token": "77dd5fe2-6c0a-419c-b941-78c56bee74cd"
 }
+
+3.4 MERCHANT WEBHOOK ENDPOINT
+------------------------------
+Endpoint URL: POST https://api.formdock.in/api/v1/store/webhooks/razorpay/
+Description: Paste this Webhook URL into your Razorpay Dashboard under Settings -> Webhooks. Select event `payment.captured`.
+
+3.5 PUBLIC ORDER TRACKING ENDPOINT
+----------------------------------
+Endpoint URL: GET https://api.formdock.in/api/v1/public/orders/track/{tracking_token}/
+
+3.6 PUBLIC ORDER CANCELLATION ENDPOINT
+---------------------------------------
+Endpoint URL: POST https://api.formdock.in/api/v1/public/orders/track/{tracking_token}/cancel/
+================================================================================
