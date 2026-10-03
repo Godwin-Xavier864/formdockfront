@@ -1,7 +1,7 @@
 ================================================================================
            FORMDOCK E-COMMERCE, PRODUCT LISTING & ORDER PLACEMENT GUIDE
 ================================================================================
-Document Version: 1.2.0
+Document Version: 1.3.0
 API Version: v1
 Target Audience: Store Developers, E-Commerce Integrators, Frontend Engineers
 
@@ -10,7 +10,7 @@ Target Audience: Store Developers, E-Commerce Integrators, Frontend Engineers
 --------------------------------------------------------------------------------
 Formdock E-Commerce provides lightweight APIs for displaying product catalogs,
 reserving stock, handling Cash on Delivery (COD) and Razorpay Online Payments (BYOPG),
-verifying signatures, and tracking order delivery.
+verifying signatures, tracking order delivery, and generating GST-compliant tax invoices.
 
 Base URL (Production): https://api.formdock.in
 
@@ -27,10 +27,13 @@ Base URL (Production): https://api.formdock.in
 3.1 PUBLIC PRODUCT LISTING ENDPOINT
 -----------------------------------
 Endpoint URL: GET https://api.formdock.in/api/v1/public/products/list/
-Query Parameter: store_api_key or project_id (string, required)
+Query Parameters:
+  - store_api_key or project_id (string, required): Merchant store API key.
+  - page (integer, optional): Page number for pagination (e.g. 1). Default: 1.
+  - page_size or limit (integer, optional): Number of products per page (max 100). Default: 20.
 
 Example Request:
-  GET https://api.formdock.in/api/v1/public/products/list/?store_api_key=fd_store_9876543210fedcba
+  GET https://api.formdock.in/api/v1/public/products/list/?store_api_key=fd_store_9876543210fedcba&page=1&page_size=10
 
 Successful Response (HTTP 200 OK):
 {
@@ -41,7 +44,17 @@ Successful Response (HTTP 200 OK):
     "accept_cod": true,
     "accept_online": true,
     "razorpay_enabled": true,
-    "razorpay_key_id": "rzp_live_1234567890"
+    "razorpay_key_id": "rzp_live_1234567890",
+    "terms_and_conditions": "By purchasing from our store, you agree to...",
+    "privacy_policy": "We respect customer privacy and handle data..."
+  },
+  "pagination": {
+    "total_products": 25,
+    "page": 1,
+    "page_size": 10,
+    "total_pages": 3,
+    "has_next": true,
+    "has_previous": false
   },
   "products": [
     {
@@ -49,6 +62,8 @@ Successful Response (HTTP 200 OK):
       "name": "Galaxy S24 Ultra",
       "description": "256GB Storage flagship smartphone.",
       "price": 129999.00,
+      "shipping_fee": 50.00,
+      "free_shipping_threshold": 499.00,
       "stock": 14,
       "category": "Electronics",
       "sub_category": "Smartphones",
@@ -56,6 +71,15 @@ Successful Response (HTTP 200 OK):
       "variants": [
         { "name": "Storage", "options": ["256GB", "512GB"] }
       ],
+      "hsn_code": "8471",
+      "tax_category": "d1a8e94b-1234-5678-90ab-cdef12345678",
+      "tax_category_detail": {
+        "id": "d1a8e94b-1234-5678-90ab-cdef12345678",
+        "name": "Electronics 18%",
+        "gst_rate": 18.0,
+        "default_hsn_code": "8471"
+      },
+      "tax_rate_override": null,
       "image_url_1": "https://cdn.formdock.in/products/sample1.jpg",
       "created_at": "2026-08-20T10:00:00Z"
     }
@@ -77,15 +101,19 @@ Request Body Parameters:
   - customer_name (string, required): Customer full name.
   - customer_email (email, required): Customer email address.
   - customer_phone (string, optional): Customer phone number.
+  - customer_state (string, optional): Customer state name for GST Place of Supply tax calculation (e.g. "Kerala", "Karnataka").
+  - customer_state_code (string, optional): 2-digit GST state code (e.g. "32", "29").
+  - customer_gstin (string, optional): Customer GSTIN for B2B Tax Invoices.
+  - billing_address (string, optional): Customer billing address (defaults to shipping address if omitted).
   - shipping_address (string, optional*): Complete single-line shipping address.
   - address_line1 (string, optional*): Street address / house number (used with structured address).
   - city (string, optional*): City name (used with structured address).
   - state (string, optional*): State or province (used with structured address).
   - pincode (string, optional*): Postal / ZIP code (used with structured address).
 
-*Note on Shipping Address: You can supply either a full 'shipping_address' string OR structured address fields ('address_line1' and 'pincode' required, plus optional 'city' and 'state'). Structured fields are automatically concatenated into 'shipping_address'.
+*Note on GST & Invoice Generation: Server-side GST tax calculation is automatically executed based on place of supply (Intra-State CGST+SGST vs Inter-State IGST). An immutable tenant sales invoice snapshot is saved, and an itemized GST Tax Invoice / Bill of Supply receipt is emailed to the buyer.
 
-Example Request Body (Online Payment with Coupon & Structured Address):
+Example Request Body (Online Payment with GST State & Structured Address):
 {
   "store_api_key": "fd_store_9876543210fedcba",
   "product_id": "8315974d-cfc7-4eb1-b086-e102bc5fd14d",
@@ -96,6 +124,9 @@ Example Request Body (Online Payment with Coupon & Structured Address):
   "customer_name": "Jane Smith",
   "customer_email": "jane@example.com",
   "customer_phone": "+919876543210",
+  "customer_state": "Maharashtra",
+  "customer_state_code": "27",
+  "customer_gstin": "27ABCDE1234F1Z5",
   "address_line1": "Flat 402, Highrise Towers",
   "city": "Mumbai",
   "state": "Maharashtra",
@@ -111,6 +142,14 @@ Successful Response - Online Payment (HTTP 201 Created):
   "magic_link": "https://formdock.in/orders/track/77dd5fe2-6c0a-419c-b941-78c56bee74cd",
   "status": "pending",
   "payment_method": "online",
+  "terms_and_conditions": "By purchasing from our store, you agree to...",
+  "privacy_policy": "We respect customer privacy and handle data...",
+  "store": {
+    "id": "8315974d-cfc7-4eb1-b086-e102bc5fd14d",
+    "name": "My Store",
+    "terms_and_conditions": "By purchasing from our store, you agree to...",
+    "privacy_policy": "We respect customer privacy and handle data..."
+  },
   "razorpay": {
     "order_id": "order_K1x928374619",
     "key_id": "rzp_live_1234567890",
@@ -130,13 +169,6 @@ Request Body Parameters:
   - razorpay_payment_id (string, required): Payment ID returned by Razorpay Checkout modal.
   - razorpay_signature (string, required): HMAC signature returned by Razorpay Checkout modal.
 
-Example Request Body:
-{
-  "razorpay_order_id": "order_K1x928374619",
-  "razorpay_payment_id": "pay_K1x998877665",
-  "razorpay_signature": "a8f9b2c3d4e5f67890..."
-}
-
 Successful Response (HTTP 200 OK):
 {
   "success": true,
@@ -145,16 +177,19 @@ Successful Response (HTTP 200 OK):
   "tracking_token": "77dd5fe2-6c0a-419c-b941-78c56bee74cd"
 }
 
-3.4 MERCHANT WEBHOOK ENDPOINT
-------------------------------
-Endpoint URL: POST https://api.formdock.in/api/v1/store/webhooks/razorpay/
-Description: Paste this Webhook URL into your Razorpay Dashboard under Settings -> Webhooks. Select event `payment.captured`.
+3.4 MERCHANT TAX CONFIGURATION & INVOICE MANAGEMENT APIs
+--------------------------------------------------------
+- GET/PATCH /api/v1/projects/{project_id}/tax-settings/
+  Configure store GST registration status (REGULAR, COMPOSITION, UNREGISTERED), GSTIN, Legal Name, Address, State, State Code, Tax-Inclusive pricing flag, and Invoice Prefix.
 
-3.5 PUBLIC ORDER TRACKING ENDPOINT
-----------------------------------
-Endpoint URL: GET https://api.formdock.in/api/v1/public/orders/track/{tracking_token}/
+- GET/POST/PATCH/DELETE /api/v1/projects/{project_id}/tax-categories/
+  Manage tenant GST tax categories (e.g. Apparel 5%, Electronics 18%, Exempt 0%) with default HSN codes.
 
-3.6 PUBLIC ORDER CANCELLATION ENDPOINT
----------------------------------------
-Endpoint URL: POST https://api.formdock.in/api/v1/public/orders/track/{tracking_token}/cancel/
-================================================================================
+- GET /api/v1/projects/{project_id}/invoices/
+  Retrieve tenant sales invoices (Tax Invoices and Bills of Supply). Supports filtering by payment_status (PAID/UNPAID), document_type (TAX_INVOICE/BILL_OF_SUPPLY), and search query.
+
+- GET /api/v1/projects/{project_id}/invoices/{invoice_id}/
+  Retrieve detailed immutable invoice snapshot with itemized HSN, taxable amounts, CGST/SGST/IGST breakdown, seller snapshot, and buyer snapshot.
+
+- GET /api/v1/projects/{project_id}/tax-report/
+  Aggregate taxable sales, CGST total, SGST total, IGST total, total GST, and grand totals for merchant statutory tax filing convenience.
