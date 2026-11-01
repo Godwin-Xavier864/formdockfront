@@ -1,58 +1,512 @@
 ================================================================================
-                        FORMDOCK CMS INTEGRATION GUIDE
+                    FORMDOCK HEADLESS CMS & COLLECTIONS GUIDE
 ================================================================================
-Document Version: 1.0.0
+Document Version: 2.0.0
 API Version: v1
-Target Audience: Frontend Developers, Full-Stack Engineers, Content Managers
+Target Audience: Frontend Developers, Full-Stack Engineers, Content Managers, Agencies
+Base URL (Production): https://api.formdock.in
+Base URL (Local Dev):  http://localhost:8000
 
 --------------------------------------------------------------------------------
-1. OVERVIEW
+1. OVERVIEW & ARCHITECTURE
 --------------------------------------------------------------------------------
-Formdock CMS allows developers to manage flexible, headless JSON data structures
-called "Collections" and "Collection Entries". You can use Formdock CMS to power
-dynamic website sections such as blog posts, team directories, testimonials, pricing
-tables, real estate listings, or product catalogs.
+Formdock Headless CMS allows developers and site owners to manage structured,
+schema-agnostic JSON content collections (such as Blog Posts, Customer Testimonials,
+Team Directories, FAQs, Pricing Tiers, Portfolio Projects, Announcements, and
+Product Highlights) and render them dynamically in any frontend without managing
+databases, migrations, or server infrastructure.
+
+Key Advantages:
+- Schema Flexibility: Each entry contains a JSON `data` object. You can store any
+  fields (strings, numbers, booleans, arrays, nested objects, image URLs, markdown).
+- Zero Infrastructure: Formdock handles hosting, storage, indexing, backups, and
+  low-latency Edge REST APIs.
+- Instant Publishing: Update content in the Formdock Dashboard (Visual Form Builder
+  or Raw JSON Editor) and see updates live immediately on your website.
+- AI Chatbot Synergy: Pass `"include_collections": true` to the Formdock AI FAQ
+  Chatbot to automatically ground AI answers in your live CMS knowledge base.
+- Multi-Platform Support: Integrate with React, Next.js, Vue, Nuxt, Svelte,
+  Astro, static HTML, Webflow, WordPress, Shopify, Wix, or mobile apps.
 
 --------------------------------------------------------------------------------
 2. AUTHENTICATION & CREDENTIALS
 --------------------------------------------------------------------------------
-- Public Read Access: Requires `project_api_key` (your project's public API key).
-- Merchant Management Access: Requires JWT Bearer Token (`Authorization: Bearer <token>`).
+Formdock provides two distinct access tiers:
+
+2.1 PUBLIC CLIENT READ ACCESS (Headless Website / App)
+- Public API Key Identifier: `project_api_key`
+- Passed as a URL query parameter in GET requests.
+- Safe to expose in client-side HTML, JavaScript, and single-page apps.
+- Enforces Allowed Domains security (configured in Project Settings) to prevent
+  unauthorized third-party websites from consuming your quota.
+
+2.2 MERCHANT MANAGEMENT ACCESS (Administrative CRUD)
+- Header: `Authorization: Bearer <access_token>`
+- Used by the Formdock Dashboard or backend admin integrations to create,
+  update, rename, and delete collections and entries.
 
 --------------------------------------------------------------------------------
 3. ENDPOINT SPECIFICATION
 --------------------------------------------------------------------------------
 
-3.1 PUBLIC COLLECTION READ ENDPOINT (HEADLESS FRONTEND API)
-------------------------------------------------------------
-Endpoint URL: GET /api/v1/public/collections/{collection_slug}/
+3.1 PUBLIC HEADLESS COLLECTION READ ENDPOINT
+--------------------------------------------
+Endpoint URL:    GET /api/v1/public/collections/{collection_slug}/
 Alternative URL: GET /api/collections/public/{collection_slug}/
-Authentication: None (Public API Key passed via query parameter)
 
 Query Parameters:
   - project_api_key (string, required): Your project's public API key.
   - limit (integer, optional): Number of entries to retrieve (Default: 20, Max: 100).
-  - page_url (string, optional): Contextual filtering url.
+  - page_url (string, optional): Contextual filtering/analytics page URL.
 
 Example Request:
-  GET /api/v1/public/collections/blog-posts/?project_api_key=fd_pub_1234567890abcdef&limit=10
+  GET https://api.formdock.in/api/v1/public/collections/blog-posts/?project_api_key=fd_pub_1234567890abcdef&limit=10
 
 Successful Response (HTTP 200 OK):
 {
   "success": true,
-  "collection": "blog-posts",
-  "count": 2,
+  "collection": {
+    "id": "e4f5a6b7-8901-2345-6789-012345abcdef",
+    "name": "Blog Posts",
+    "slug": "blog-posts"
+  },
+  "limit": 10,
   "entries": [
     {
       "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+      "collection": "e4f5a6b7-8901-2345-6789-012345abcdef",
       "data": {
-        "title": "Welcome to Our Platform",
-        "author": "Jane Doe",
-        "content": "This is our inaugural blog post...",
-        "published_at": "2026-08-20"
+        "title": "Mastering Headless Architecture in 2026",
+        "slug": "mastering-headless-architecture-2026",
+        "author": "Sarah Chen",
+        "summary": "How decoupled CMS APIs empower blazing fast user experiences.",
+        "content": "Headless CMS lets you decouple content management...",
+        "cover_image": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800",
+        "category": "Tutorials",
+        "tags": ["Architecture", "Speed", "Next.js"],
+        "published_at": "2026-09-15",
+        "is_published": true
       },
-      "created_at": "2026-08-20T10:00:00Z"
+      "created_at": "2026-09-15T10:00:00Z",
+      "updated_at": "2026-09-15T12:30:00Z"
     }
   ]
 }
+
+3.2 MERCHANT ADMINISTRATIVE REST ENDPOINTS (AUTHENTICATED)
+-----------------------------------------------------------
+All administrative endpoints require JWT Bearer token:
+`Authorization: Bearer <jwt_access_token>`
+
+- List Collections:
+  GET /api/v1/projects/{project_id}/collections/
+
+- Create Collection:
+  POST /api/v1/projects/{project_id}/collections/
+  Body: { "name": "Testimonials" }
+
+- Get Collection Details:
+  GET /api/v1/projects/{project_id}/collections/{collection_id}/
+
+- Rename Collection:
+  PATCH /api/v1/projects/{project_id}/collections/{collection_id}/
+  Body: { "name": "Customer Testimonials & Reviews" }
+
+- Delete Collection:
+  DELETE /api/v1/projects/{project_id}/collections/{collection_id}/
+
+- List Collection Entries:
+  GET /api/v1/projects/{project_id}/collections/{collection_id}/entries/?limit=50
+
+- Create Collection Entry:
+  POST /api/v1/projects/{project_id}/collections/{collection_id}/entries/
+  Body: {
+    "data": {
+      "client_name": "Elena Rostova",
+      "role": "Founder & CEO",
+      "company": "Vanguard Labs",
+      "quote": "The simplest yet most powerful headless CMS we have ever integrated.",
+      "rating": 5,
+      "featured": true
+    }
+  }
+
+- Update Collection Entry:
+  PATCH /api/v1/projects/{project_id}/collections/{collection_id}/entries/{entry_id}/
+  Body: {
+    "data": {
+      "client_name": "Elena Rostova",
+      "role": "Founder & CEO",
+      "quote": "Updated testimonial quote...",
+      "rating": 5
+    }
+  }
+
+- Delete Collection Entry:
+  DELETE /api/v1/projects/{project_id}/collections/{collection_id}/entries/{entry_id}/
+
+--------------------------------------------------------------------------------
+4. STEP-BY-STEP INTEGRATION CODE SNIPPETS
+--------------------------------------------------------------------------------
+
+4.1 JAVASCRIPT FETCH (VANILLA JS / BROWSER / NODE.JS)
+-----------------------------------------------------
+async function getCollectionEntries(collectionSlug, limit = 20) {
+  const PUBLIC_API_KEY = 'YOUR_PUBLIC_API_KEY';
+  const BASE_URL = 'https://api.formdock.in';
+  const url = `${BASE_URL}/api/v1/public/collections/${collectionSlug}/?project_api_key=${PUBLIC_API_KEY}&limit=${limit}`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP Error ${response.status}: ${response.statusText}`);
+    }
+
+    const payload = await response.json();
+    if (payload.success) {
+      console.log(`Loaded ${payload.entries.length} entries for ${payload.collection.name}`);
+      return payload.entries; // Array of { id, data: {...}, created_at }
+    } else {
+      console.error('API Error:', payload.error);
+      return [];
+    }
+  } catch (error) {
+    console.error('Failed to fetch Formdock collection:', error);
+    return [];
+  }
+}
+
+// Example usage:
+getCollectionEntries('blog-posts', 10).then(entries => {
+  entries.forEach(e => console.log(e.data.title));
+});
+
+
+4.2 REACT 18 / 19 COMPONENT (RESPONSIVE CARD GRID)
+---------------------------------------------------
+import React, { useState, useEffect } from 'react';
+
+export function BlogPostsGrid() {
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const COLLECTION_SLUG = 'blog-posts';
+  const PUBLIC_API_KEY = 'YOUR_PUBLIC_API_KEY';
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchBlogPosts() {
+      try {
+        setLoading(true);
+        const res = await fetch(
+          `https://api.formdock.in/api/v1/public/collections/${COLLECTION_SLUG}/?project_api_key=${PUBLIC_API_KEY}&limit=20`
+        );
+        const data = await res.json();
+
+        if (isMounted) {
+          if (res.ok && data.success) {
+            setPosts(data.entries || []);
+          } else {
+            setError(data.error || 'Failed to retrieve blog posts.');
+          }
+        }
+      } catch (err) {
+        if (isMounted) setError(err.message);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    fetchBlogPosts();
+    return () => { isMounted = false; };
+  }, []);
+
+  if (loading) return <div className="loading-state">Loading articles...</div>;
+  if (error) return <div className="error-state">Error: {error}</div>;
+  if (!posts.length) return <div className="empty-state">No articles found.</div>;
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+      {posts.map(({ id, data, created_at }) => (
+        <article key={id} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', background: '#fff' }}>
+          {data.cover_image && (
+            <img
+              src={data.cover_image}
+              alt={data.title || 'Post cover'}
+              style={{ width: '100%', height: '180px', objectFit: 'cover', borderRadius: '8px', marginBottom: '14px' }}
+            />
+          )}
+          <span style={{ fontSize: '12px', color: '#64748b' }}>
+            {data.category || 'Article'} • {new Date(created_at).toLocaleDateString()}
+          </span>
+          <h3 style={{ margin: '8px 0', fontSize: '18px' }}>{data.title}</h3>
+          <p style={{ color: '#475569', fontSize: '14px', lineHeight: '1.6' }}>{data.summary || data.content}</p>
+          {data.author && <small style={{ color: '#94a3b8' }}>By {data.author}</small>}
+        </article>
+      ))}
+    </div>
+  );
+}
+
+
+4.3 NEXT.JS 14 / 15 APP ROUTER (SERVER COMPONENT WITH CACHING & SEO)
+--------------------------------------------------------------------
+// app/testimonials/page.jsx (Server Component)
+export const revalidate = 60; // Incremental Static Regeneration (ISR) every 60s
+
+async function getTestimonials() {
+  const PUBLIC_KEY = process.env.FORMDOCK_PUBLIC_KEY || 'YOUR_PUBLIC_API_KEY';
+  const res = await fetch(
+    `https://api.formdock.in/api/v1/public/collections/testimonials/?project_api_key=${PUBLIC_KEY}&limit=20`,
+    { next: { revalidate: 60 } }
+  );
+
+  if (!res.ok) {
+    throw new Error('Failed to fetch testimonials from Formdock CMS');
+  }
+
+  return res.json();
+}
+
+export default async function TestimonialsPage() {
+  const { collection, entries } = await getTestimonials();
+
+  return (
+    <main className="max-w-6xl mx-auto px-4 py-16">
+      <h1 className="text-3xl font-bold text-center mb-12">{collection?.name || 'What Clients Say'}</h1>
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {entries.map(({ id, data }) => (
+          <div key={id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
+            <p className="text-gray-700 italic mb-6">"{data.quote}"</p>
+            <div className="flex items-center gap-4">
+              {data.avatar_url && (
+                <img src={data.avatar_url} alt={data.client_name} className="w-12 h-12 rounded-full object-cover" />
+              )}
+              <div>
+                <h4 className="font-semibold text-gray-900">{data.client_name}</h4>
+                <p className="text-xs text-gray-500">{data.role} at {data.company}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </main>
+  );
+}
+
+
+4.4 VUE 3 COMPOSITION API (<script setup>)
+------------------------------------------
+<template>
+  <div class="cms-faq-container">
+    <h2>{{ collectionName }}</h2>
+    <div v-if="loading" class="loading">Loading FAQs...</div>
+    <div v-else-if="error" class="error">{{ error }}</div>
+    <div v-else class="accordion">
+      <details v-for="entry in faqs" :key="entry.id" class="faq-item">
+        <summary><strong>{{ entry.data.question }}</strong></summary>
+        <p>{{ entry.data.answer }}</p>
+      </details>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue';
+
+const faqs = ref([]);
+const collectionName = ref('Frequently Asked Questions');
+const loading = ref(true);
+const error = ref(null);
+
+onMounted(async () => {
+  try {
+    const res = await fetch(
+      'https://api.formdock.in/api/v1/public/collections/faqs/?project_api_key=YOUR_PUBLIC_API_KEY&limit=50'
+    );
+    const json = await res.json();
+    if (json.success) {
+      faqs.value = json.entries || [];
+      if (json.collection?.name) collectionName.value = json.collection.name;
+    } else {
+      error.value = json.error || 'Failed to load FAQ items';
+    }
+  } catch (err) {
+    error.value = err.message;
+  } finally {
+    loading.value = false;
+  }
+});
+</script>
+
+
+4.5 DROP-IN STATIC HTML EMBED (WEBFLOW / WORDPRESS / WIX / STATIC SITES)
+------------------------------------------------------------------------
+<!-- Drop this snippet into any HTML page, Webflow Embed, or WordPress custom HTML block -->
+<div id="formdock-team-showcase"></div>
+
+<script>
+(async function() {
+  const container = document.getElementById('formdock-team-showcase');
+  const URL = 'https://api.formdock.in/api/v1/public/collections/team-members/?project_api_key=YOUR_PUBLIC_API_KEY&limit=12';
+
+  try {
+    const res = await fetch(URL);
+    const json = await res.json();
+    if (!json.success || !json.entries.length) {
+      container.innerHTML = '<p>No team members listed.</p>';
+      return;
+    }
+
+    container.innerHTML = `
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; font-family: system-ui, sans-serif;">
+        ${json.entries.map(e => `
+          <div style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; text-align: center; background: #fff;">
+            ${e.data.photo_url ? `<img src="${e.data.photo_url}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 12px;">` : ''}
+            <h4 style="margin: 0 0 4px 0; font-size: 16px;">${e.data.name || 'Member'}</h4>
+            <p style="margin: 0; color: #ff6b00; font-size: 13px; font-weight: 600;">${e.data.role || ''}</p>
+            <p style="margin: 8px 0 0 0; color: #64748b; font-size: 13px;">${e.data.bio || ''}</p>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  } catch (err) {
+    container.innerHTML = '<p style="color: red;">Failed to load team directory.</p>';
+  }
+})();
+</script>
+
+
+4.6 PYTHON (BACKEND SERVICE OR DATA PIPELINE)
+---------------------------------------------
+import requests
+
+def fetch_formdock_collection(collection_slug: str, api_key: str, limit: int = 50):
+    url = f"https://api.formdock.in/api/v1/public/collections/{collection_slug}/"
+    params = {
+        "project_api_key": api_key,
+        "limit": limit
+    }
+    response = requests.get(url, params=params, timeout=10)
+    response.raise_for_status()
+    payload = response.json()
+    
+    if payload.get("success"):
+        return payload.get("entries", [])
+    raise ValueError(f"Formdock CMS error: {payload.get('error')}")
+
+# Example:
+entries = fetch_formdock_collection("blog-posts", "YOUR_PUBLIC_API_KEY")
+for item in entries:
+    print(f"Title: {item['data'].get('title')} (Created: {item['created_at']})")
+
+
+4.7 CURL TERMINAL COMMAND
+-------------------------
+curl -X GET "https://api.formdock.in/api/v1/public/collections/blog-posts/?project_api_key=YOUR_PUBLIC_API_KEY&limit=10" \
+  -H "Accept: application/json"
+
+--------------------------------------------------------------------------------
+5. COMMON STARTER SCHEMAS & TEMPLATES
+--------------------------------------------------------------------------------
+You can structure the `data` payload however your application requires. Here are
+recommended schema standards built directly into the Formdock CMS Template Library:
+
+5.1 BLOG POSTS (`blog-posts`)
+- `title` (string): Article headline
+- `slug` (string): URL-friendly handle
+- `author` (string): Author name
+- `summary` (string): Short excerpt
+- `content` (string): Markdown or HTML body text
+- `cover_image` (string): Image URL
+- `tags` (array of strings): ["Engineering", "Product"]
+- `published_at` (string): ISO Date (e.g. "2026-10-01")
+- `is_published` (boolean): true / false
+
+5.2 TESTIMONIALS (`testimonials`)
+- `client_name` (string): Full name
+- `role` (string): Job title
+- `company` (string): Company name
+- `avatar_url` (string): Client headshot URL
+- `quote` (string): Testimonial text
+- `rating` (number): 1 to 5
+- `featured` (boolean): Highlight on homepage
+
+5.3 TEAM MEMBERS (`team-members`)
+- `name` (string): Member name
+- `role` (string): Position/title
+- `department` (string): Engineering, Design, etc.
+- `bio` (string): Short biography
+- `photo_url` (string): Portrait image URL
+- `linkedin_url` (string): Social profile URL
+- `order` (number): Sorting sequence
+
+5.4 FAQ KNOWLEDGE BASE (`faqs`)
+- `question` (string): Question text
+- `answer` (string): Answer explanation
+- `category` (string): Topic group (e.g. Billing, Technical)
+- `order` (number): Display index
+- `is_active` (boolean): Visibility switch
+
+5.5 PRICING PLANS (`pricing-plans`)
+- `name` (string): Plan tier name (e.g. "Pro Tier")
+- `price` (number): Cost (e.g. 29)
+- `currency` (string): "USD", "EUR", "INR"
+- `billing_period` (string): "monthly", "annually"
+- `features` (array of strings): Bullet list of features
+- `is_popular` (boolean): Highlight badge
+- `cta_text` (string): Button text ("Start Free Trial")
+- `cta_url` (string): Redirect URL
+
+--------------------------------------------------------------------------------
+6. CONNECTING CMS COLLECTIONS TO FORMDOCK AI FAQ CHATBOT
+--------------------------------------------------------------------------------
+Formdock features seamless synergy between your CMS collections and the conversational
+AI FAQ Chatbot. When visitors ask questions, the AI chatbot can reference your live CMS
+collections (such as FAQs, blog posts, pricing tiers, and product highlights) as
+grounded context.
+
+To enable CMS context in the AI Chatbot, simply set `"include_collections": true`
+in your POST request to `/api/v1/public/faq/chat/`:
+
+POST /api/v1/public/faq/chat/
+Content-Type: application/json
+{
+  "faq_api_key": "YOUR_FAQ_PUBLIC_API_KEY",
+  "question": "What are your refund terms and what plans do you offer?",
+  "include_collections": true
+}
+
+The AI engine automatically loads your latest collection entries, extracts relevant
+information, and formulates an accurate answer in real-time.
+
+--------------------------------------------------------------------------------
+7. BEST PRACTICES & SECURITY
+--------------------------------------------------------------------------------
+1. Domain Whitelisting:
+   In your Formdock Dashboard under Project Settings, specify your allowed website
+   domains (e.g. `https://mywebsite.com`). Formdock automatically enforces CORS and
+   rejects unauthorized origins.
+
+2. Caching & Performance:
+   When building with Next.js, Nuxt, or Gatsby, use ISR (Incremental Static
+   Regeneration) with a revalidation interval between 60 and 300 seconds. This gives
+   you instantaneous sub-10ms page loads from global CDN caches while ensuring content
+   edits propagate automatically.
+
+3. Payload Size Safety:
+   Each collection entry supports up to 64 KB of structured JSON. For large media
+   assets (photos, videos, PDFs), store the CDN URL in your fields rather than
+   base64 strings.
+
+4. Graceful Degradation:
+   Always wrap frontend `fetch()` requests in `try...catch` blocks and provide
+   fallback empty state UI elements so user experience remains resilient even during
+   client-side network interruptions.
 ================================================================================
