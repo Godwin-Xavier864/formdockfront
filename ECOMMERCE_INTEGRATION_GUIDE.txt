@@ -45,6 +45,9 @@ Successful Response (HTTP 200 OK):
     "accept_online": true,
     "razorpay_enabled": true,
     "razorpay_key_id": "rzp_live_1234567890",
+    "delivery_scope": "all_india",
+    "delivery_states": ["Kerala", "Tamil Nadu"],
+    "delivery_districts": { "Kerala": ["Ernakulam", "Alappuzha"] },
     "terms_and_conditions": "By purchasing from our store, you agree to...",
     "privacy_policy": "We respect customer privacy and handle data..."
   },
@@ -101,7 +104,9 @@ Request Body Parameters:
   - customer_name (string, required): Customer full name.
   - customer_email (email, required): Customer email address.
   - customer_phone (string, optional): Customer phone number.
-  - customer_state (string, optional): Customer state name for GST Place of Supply tax calculation (e.g. "Kerala", "Karnataka").
+  - customer_state (string, optional): Customer state name for GST Place of Supply tax calculation and delivery validation (e.g. "Kerala", "Karnataka").
+  - customer_district (string, optional*): Customer district name for delivery validation (e.g. "Ernakulam", "Bengaluru Urban").
+  - district (string, optional*): Alias for customer_district.
   - customer_state_code (string, optional): 2-digit GST state code (e.g. "32", "29").
   - customer_gstin (string, optional): Customer GSTIN for B2B Tax Invoices.
   - billing_address (string, optional): Customer billing address (defaults to shipping address if omitted).
@@ -111,9 +116,20 @@ Request Body Parameters:
   - state (string, optional*): State or province (used with structured address).
   - pincode (string, optional*): Postal / ZIP code (used with structured address).
 
+*Note on Delivery Location Validation & Error Handling:
+Before placing an order or reserving inventory, Formdock validates whether the delivery address is serviceable by the store:
+  1. If delivery_scope is "all_india", orders from any Indian state or district are accepted.
+  2. If delivery_scope is "state_wise", the order's state must match one of the store's delivery_states. If outside allowed states, the API rejects the request with HTTP 400 Bad Request:
+     {"error": "This store does not deliver to Tamil Nadu. Available states: Kerala, Karnataka."}
+  3. If delivery_scope is "district_wise", the order's state and district must be explicitly permitted under delivery_districts[state]. If outside allowed districts, the API rejects the request with HTTP 400 Bad Request:
+     {"error": "This store only delivers to selected districts in Kerala: Ernakulam, Alappuzha. Delivery to Wayanad is not available."}
+
+To fetch all canonical 36 States/UTs and their districts for building dropdown menus:
+GET https://api.formdock.in/api/v1/public/locations/india/
+
 *Note on GST & Invoice Generation: Server-side GST tax calculation is automatically executed based on place of supply (Intra-State CGST+SGST vs Inter-State IGST). An immutable tenant sales invoice snapshot is saved, and an itemized GST Tax Invoice / Bill of Supply receipt is emailed to the buyer.
 
-Example Request Body (Online Payment with GST State & Structured Address):
+Example Request Body (Online Payment with GST State, District & Structured Address):
 {
   "store_api_key": "fd_store_9876543210fedcba",
   "product_id": "8315974d-cfc7-4eb1-b086-e102bc5fd14d",
@@ -125,10 +141,12 @@ Example Request Body (Online Payment with GST State & Structured Address):
   "customer_email": "jane@example.com",
   "customer_phone": "+919876543210",
   "customer_state": "Maharashtra",
+  "customer_district": "Mumbai Suburban",
   "customer_state_code": "27",
   "customer_gstin": "27ABCDE1234F1Z5",
   "address_line1": "Flat 402, Highrise Towers",
   "city": "Mumbai",
+  "district": "Mumbai Suburban",
   "state": "Maharashtra",
   "pincode": "400001"
 }
